@@ -1,0 +1,86 @@
+---
+title: "makroudaje"
+author: "MF"
+date: "2026-03-12"
+output: html_document
+---
+
+```{r}
+library(reticulate)
+reticulate::py_require("numpy")
+reticulate::py_require("pandas")
+```
+
+```{python}
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv("makrodata.csv", index_col = 0)
+df  = df.sort_values(["country", "year"])
+df
+
+
+```
+
+# Rozdiely v čase
+
+```{python}
+#Pre každú krajinu vypočítajte absolútnu medziročnú zmenu HDP.
+df["gdp_diff"] = df.groupby("country")["gdp"].diff()
+df["gdp_diff"]
+
+#Pre každú krajinu vypočítajte percentuálnu medziročnú zmenu HDP. 
+df["pct_change"] = df.groupby("country")["gdp"].pct_change()*100
+df["pct_change"]
+
+#Pre každú krajinu vypočítajte rozdiel medzi HDP v danom roku a jej priemerným HDP za celé sledované obdobie.
+
+df["gdp_dev_mean"] = (df["gdp"] - df.groupby("country")["gdp"].transform("mean"))
+df["gdp_dev_mean"]
+
+#Pre každú krajinu vypočítajte absolútnu medziročnú zmenu inflácie.
+df["inf_change"] = df.groupby("country")["inf"].diff()
+df["inf_change"]
+
+#Pre každú krajinu vypočítajte percentuálnu medziročnú zmenu exportu
+df["exp_change"] = df.groupby("country")["exp"].pct_change()*100
+df["exp_change"]
+
+#Pre každú krajinu vypočítajte rozdiel medzi mierou nezamestnanosti v danom roku a jej priemernou nezamestnanosťou za celé sledované obdobie.
+df["un_change"] = (df["un"] - df.groupby("country")["un"].transform("mean"))
+df["un_change"]
+
+```
+
+# Rozdiely voči skupinovému priemeru
+
+```{python}
+#Vyfiltrujte krajiny SK, CZ, PL, HU
+#Vypočítajte rozdiel HDP danej krajiny voči priemeru V4 v danom roku.
+#Pre krajiny V4 určte poradie podľa HDP v danom roku.
+
+v4 = ["SK", "PL", "HU", "CZ"]
+
+df_v4 = df[df["country"].isin(v4)].copy()
+df_v4["gdp_dev_mean"] = (df_v4["gdp"] - df_v4.groupby("year")["gdp"].transform("mean"))
+df_v4["gdp_dev_mean"]
+
+#Pre krajiny V4 určte poradie podľa HDP v danom roku.
+df_v4["gdp_rank_v4"] = (df_v4.groupby("year")["gdp"].rank(ascending=False))
+df_v4["gdp_rank_v4"]
+
+#Vyberte krajiny EU a určte, ktorá krajina je pod alebo nad priemerom HDP EU.
+eu = ["BE","BG","CZ","DK","DE","EE","IE","EL","ES","FR","HR","IT",
+"CY","LV","LT","LU","HU","MT","NL","AT","PL","PT","RO","SI",
+"SK","FI","SE"]
+
+df_eu = df[df["country"].isin(eu)].copy()
+df_eu["gdp_eu_mean"] = (df_eu["gdp"] - df_eu.groupby("country")["gdp"].transform("mean"))
+df_eu["gdp_eu_mean"]
+
+#Určte poradie každej krajiny podľa HDP medzi krajinami EÚ
+df_eu["gdp_rank_eu"] = (df_eu.groupby("year")["gdp"].rank(ascending = False))
+df_eu["gdp_rank_eu"]
+
+
+```
