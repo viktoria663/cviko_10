@@ -82,5 +82,6 @@ df_eu["gdp_eu_mean"]
 df_eu["gdp_rank_eu"] = (df_eu.groupby("year")["gdp"].rank(ascending = False))
 df_eu["gdp_rank_eu"]
 
+#jednaveta
 
 ```
